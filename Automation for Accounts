@@ -1,0 +1,74 @@
+Sub CopyData()
+    Dim sourceSheet As Worksheet
+    Dim destinationSheet As Worksheet
+    Dim lastRow As Long
+    
+    ' Set references to the sheets
+    Set sourceSheet = ThisWorkbook.Sheets("Sheet1")
+    Set destinationSheet = ThisWorkbook.Sheets("Sheet2")
+    
+    ' Find the last row with data in the source sheet
+    lastRow = sourceSheet.Cells(sourceSheet.Rows.Count, "A").End(xlUp).Row
+    
+    ' Copy data from Sheet1 to Sheet2
+    sourceSheet.Range("A1:A" & lastRow).Copy _
+        Destination:=destinationSheet.Range("A1")
+    
+    ' Optional: Clear the clipboard
+    Application.CutCopyMode = False
+    
+    MsgBox "Data copied successfully from Sheet1 to Sheet2!"
+End Sub
+Sub CreateSheetsAndPivotTable()
+    Dim wsData As Worksheet
+    Dim wsPivot As Worksheet
+    Dim wsSummary As Worksheet
+    Dim lastRow As Long
+    Dim pt As PivotTable
+    Dim ptCache As PivotCache
+    Dim pivotRange As Range
+    
+    ' Add a new worksheet for data
+    Set wsData = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+    wsData.Name = "Data"
+
+    ' Add sample data to Data sheet
+    wsData.Range("A1").Value = "Category"
+    wsData.Range("B1").Value = "Value"
+    wsData.Range("A2").Value = "A"
+    wsData.Range("B2").Value = 100
+    wsData.Range("A3").Value = "B"
+    wsData.Range("B3").Value = 150
+    wsData.Range("A4").Value = "A"
+    wsData.Range("B4").Value = 200
+    wsData.Range("A5").Value = "C"
+    wsData.Range("B5").Value = 300
+
+    ' Create another worksheet for Pivot Table
+    Set wsPivot = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+    wsPivot.Name = "Pivot Table"
+    
+    ' Determine the last row in Data sheet
+    lastRow = wsData.Cells(wsData.Rows.Count, "A").End(xlUp).Row
+    
+    ' Define the range for the Pivot Table
+    Set pivotRange = wsData.Range("A1:B" & lastRow)
+
+    ' Create Pivot Table
+    Set ptCache = ThisWorkbook.PivotCaches.Create( _
+        SourceType:=xlDatabase, _
+        SourceData:=pivotRange)
+    
+    Set pt = ptCache.CreatePivotTable( _
+        TableDestination:=wsPivot.Range("A1"), _
+        TableName:="SummaryPivotTable")
+    
+    ' Configure the Pivot Table
+    With pt
+        .PivotFields("Category").Orientation = xlRowField
+        .PivotFields("Value").Orientation = xlDataField
+        .PivotFields("Value").Function = xlSum
+    End With
+
+    MsgBox "Sheets created and Pivot Table generated successfully!"
+End Sub
